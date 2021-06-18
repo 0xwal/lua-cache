@@ -44,5 +44,111 @@ describe('cache', function()
         assert.is_equals(1, cache_get('players'))
     end)
 
+    it('should return nil not available key', function()
+        assert.is_equals(nil, cache_get('players'))
+    end)
+
+    it('should able to add set observer to a key', function()
+        local observer = spy()
+        cache_add_set_observer('players', observer)
+        cache_set('players', 66)
+        assert.spy(observer).was_called(1)
+        assert.spy(observer).was_called_with(66)
+    end)
+
+    it('should able to add get observer to a key', function()
+        local observer = spy()
+        cache_add_get_observer('players', observer)
+        cache_set('players', 66)
+        cache_get('players')
+        assert.spy(observer).was_called(1)
+        assert.spy(observer).was_called_with(66)
+    end)
+
+    it('should call the observer with nil value even if the key is not exist', function()
+        local observer = spy()
+        cache_add_get_observer('players', observer)
+        cache_get('players')
+        assert.spy(observer).was_called(1)
+        assert.spy(observer).was_called_with(nil)
+    end)
+
+    it('should able to add multi set observers for a key', function()
+        local observer1 = spy()
+        local observer2 = spy()
+        cache_add_set_observer('players', observer1)
+        cache_add_set_observer('players', observer2)
+        cache_set('players', 66)
+        assert.spy(observer1).was_called(1)
+        assert.spy(observer1).was_called_with(66)
+        assert.spy(observer2).was_called(1)
+        assert.spy(observer2).was_called_with(66)
+    end)
+
+    it('should able to add multi get observers for a key', function()
+        local observer1 = spy()
+        local observer2 = spy()
+        cache_add_get_observer('players', observer1)
+        cache_add_get_observer('players', observer2)
+        cache_set('players', 66)
+        cache_get('players')
+        assert.spy(observer1).was_called(1)
+        assert.spy(observer1).was_called_with(66)
+        assert.spy(observer2).was_called(1)
+        assert.spy(observer2).was_called_with(66)
+    end)
+
+    it('should throw when set observer is not a callable', function()
+        local wrapper = function(observer)
+            return function()
+                cache_add_set_observer('key', observer)
+            end
+        end
+
+        assert.was.error(wrapper(0), 'Observer is not callable.')
+        assert.was.error(wrapper(true), 'Observer is not callable.')
+        assert.was.error(wrapper({}), 'Observer is not callable.')
+        assert.was.error(wrapper("string"), 'Observer is not callable.')
+    end)
+
+    it('should throw when get observer is not a callable', function()
+        local wrapper = function(observer)
+            return function()
+                cache_add_get_observer('key', observer)
+            end
+        end
+
+        assert.was.error(wrapper(0), 'Observer is not callable.')
+        assert.was.error(wrapper(true), 'Observer is not callable.')
+        assert.was.error(wrapper({}), 'Observer is not callable.')
+        assert.was.error(wrapper("string"), 'Observer is not callable.')
+    end)
+
+
+    it('should throw when add set observer with key that is not a string', function()
+        local wrapper = function(key)
+            return function()
+                cache_add_set_observer(key, spy())
+            end
+        end
+
+        assert.was.error(wrapper(0), 'Expected key to be a string.')
+        assert.was.error(wrapper(true), 'Expected key to be a string.')
+        assert.was.error(wrapper({}), 'Expected key to be a string.')
+        assert.was.error(wrapper(nil), 'Expected key to be a string.')
+    end)
+
+    it('should throw when we add get observer with key that is not a string', function()
+        local wrapper = function(key)
+            return function()
+                cache_add_get_observer(key, spy())
+            end
+        end
+
+        assert.was.error(wrapper(0), 'Expected key to be a string.')
+        assert.was.error(wrapper(true), 'Expected key to be a string.')
+        assert.was.error(wrapper({}), 'Expected key to be a string.')
+        assert.was.error(wrapper(nil), 'Expected key to be a string.')
+    end)
 
 end)
