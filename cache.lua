@@ -70,6 +70,9 @@ function cache_add_set_observer(key, observer)
 
     if not store[key] then
         cache_set(key, nil)
+    end
+
+    if not store[key].setObservers then
         store[key].setObservers = {}
     end
 
@@ -80,7 +83,11 @@ function cache_add_get_observer(key, observer)
     ensure_observer_is_callable(observer)
     if not store[key] then
         cache_set(key, nil)
+    end
+
+    if not store[key].getObservers then
         store[key].getObservers = {}
     end
+
     table.insert(store[key].getObservers, observer)
 end
