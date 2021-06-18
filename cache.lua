@@ -41,7 +41,7 @@ function cache_set(key, value)
     end
 
     if store[key].setObservers then
-        for _, v in ipairs(store[key].setObservers) do
+        for _, v in pairs(store[key].setObservers) do
             v(store[key].value)
         end
     end
@@ -57,7 +57,7 @@ function cache_get(key)
     end
 
     if cacheValue and cacheValue.getObservers then
-        for _, v in ipairs(store[key].getObservers) do
+        for _, v in pairs(store[key].getObservers) do
             v(cacheValue.value)
         end
     end
@@ -76,11 +76,22 @@ function cache_add_set_observer(key, observer)
         store[key].setObservers = {}
     end
 
-    table.insert(store[key].setObservers, observer)
+    store[key].setObservers[tostring(observer)] = observer
+end
+
+function cache_remove_set_observer(key, observer)
+    ensure_key(key)
+
+    if not store[key] or not store[key].setObservers then
+        return
+    end
+
+    store[key].setObservers[tostring(observer)] = nil
 end
 
 function cache_add_get_observer(key, observer)
     ensure_observer_is_callable(observer)
+
     if not store[key] then
         cache_set(key, nil)
     end
@@ -89,5 +100,15 @@ function cache_add_get_observer(key, observer)
         store[key].getObservers = {}
     end
 
-    table.insert(store[key].getObservers, observer)
+    store[key].getObservers[tostring(observer)] = observer
+end
+
+function cache_remove_get_observer(key, observer)
+    ensure_key(key)
+
+    if not store[key] or not store[key].getObservers then
+        return
+    end
+
+    store[key].getObservers[tostring(observer)] = nil
 end
