@@ -47,6 +47,10 @@ function cache_set(key, value)
     end
 end
 
+function cache_unset(key)
+    store[key] = nil
+end
+
 function cache_get(key)
     ensure_key(key)
 
