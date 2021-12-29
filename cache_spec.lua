@@ -283,7 +283,7 @@ describe('cache driver', function()
         assert.spy(driverGet).was_called_with('k')
     end)
 
-    it('should able to get with custom driver', function()
+    it('should able to unset with custom driver', function()
         local driverUnset = spy()
         cache_set_driver(function()
             return {
