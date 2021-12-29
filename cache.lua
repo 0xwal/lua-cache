@@ -67,8 +67,9 @@ function cache_set(key, value)
 end
 
 function cache_unset(key)
-    --todo remove observers
     g_cacheDriver.unset(key)
+    g_setObservers[key] = nil
+    g_getObservers[key] = nil
 end
 
 function cache_get(key)
