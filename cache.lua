@@ -3,7 +3,32 @@
 --- DateTime: 6/18/21 1:25 AM
 ---
 
-local store = {}
+local g_setObservers = {}
+local g_getObservers = {}
+
+function memoryDriver()
+    local store = {}
+    local m     = {}
+
+    m.name      = 'memory'
+
+    m.get       = function(key)
+        return store[key]
+    end
+
+    m.set       = function(key, value)
+        store[key] = value
+    end
+
+    m.unset     = function(key)
+        store[key] = nil
+    end
+
+    return m
+end
+
+---@type CacheDriver
+local g_cacheDriver = memoryDriver()
 
 local function is_callable(var)
     if type(var) == 'function' then
@@ -32,87 +57,81 @@ end
 function cache_set(key, value)
     ensure_key(key)
 
-    if store[key] then
-        store[key].value = value
-    else
-        store[key] = {
-            value = value
-        }
-    end
+    g_cacheDriver.set(key, value)
 
-    if store[key].setObservers then
-        for _, v in pairs(store[key].setObservers) do
-            v(store[key].value)
+    if g_setObservers[key] then
+        for _, v in pairs(g_setObservers[key]) do
+            v(value)
         end
     end
 end
 
 function cache_unset(key)
-    store[key] = nil
+    --todo remove observers
+    g_cacheDriver.unset(key)
 end
 
 function cache_get(key)
     ensure_key(key)
 
-    local cacheValue = store[key]
+    local cacheValue = g_cacheDriver.get(key)
 
     if not cacheValue then
         return nil
     end
 
-    if cacheValue and cacheValue.getObservers then
-        for _, v in pairs(store[key].getObservers) do
-            v(cacheValue.value)
+    if g_getObservers[key] then
+        for _, v in pairs(g_getObservers[key]) do
+            v(cacheValue)
         end
     end
 
-    return cacheValue.value
+    return cacheValue
 end
 
 function cache_add_set_observer(key, observer)
     ensure_observer_is_callable(observer)
+    ensure_key(key)
 
-    if not store[key] then
-        cache_set(key, nil)
+    if not g_setObservers[key] then
+        g_setObservers[key] = {}
     end
 
-    if not store[key].setObservers then
-        store[key].setObservers = {}
-    end
-
-    store[key].setObservers[tostring(observer)] = observer
+    g_setObservers[key][tostring(observer)] = observer
 end
 
 function cache_remove_set_observer(key, observer)
     ensure_key(key)
 
-    if not store[key] or not store[key].setObservers then
+    if not g_setObservers[key] then
         return
     end
 
-    store[key].setObservers[tostring(observer)] = nil
+    g_setObservers[key][tostring(observer)] = nil
 end
 
 function cache_add_get_observer(key, observer)
     ensure_observer_is_callable(observer)
+    ensure_key(key)
 
-    if not store[key] then
-        cache_set(key, nil)
+    if not g_getObservers[key] then
+        g_getObservers[key] = {}
     end
 
-    if not store[key].getObservers then
-        store[key].getObservers = {}
-    end
-
-    store[key].getObservers[tostring(observer)] = observer
+    g_getObservers[key][tostring(observer)] = observer
 end
 
 function cache_remove_get_observer(key, observer)
     ensure_key(key)
 
-    if not store[key] or not store[key].getObservers then
+    if not g_getObservers[key] then
         return
     end
 
-    store[key].getObservers[tostring(observer)] = nil
+    g_getObservers[key][tostring(observer)] = nil
+end
+
+---@param driverInitFunc CacheDriverInitFunc
+function cache_set_driver(driverInitFunc)
+    g_cacheDriver = driverInitFunc()
 end

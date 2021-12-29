@@ -84,14 +84,6 @@ describe('cache', function()
         assert.spy(observer).was_called_with(11)
     end)
 
-    it('should call the observer with nil value even if the key is not exist', function()
-        local observer = spy()
-        cache_add_get_observer('players', observer)
-        cache_get('players')
-        assert.spy(observer).was_called(1)
-        assert.spy(observer).was_called_with(nil)
-    end)
-
     it('should able to add multi set observers for a key', function()
         local observer1 = spy()
         local observer2 = spy()
@@ -252,5 +244,58 @@ describe('cache', function()
         assert.was_no_error(function()
             cache_unset('not-exist-key')
         end)
+    end)
+end)
+
+describe('cache driver', function()
+
+    before_each(function()
+        hard_require('cache')
+    end)
+
+    it('should able to set with custom driver', function()
+        local driverSet = spy()
+        cache_set_driver(function()
+            return {
+                set = driverSet,
+                get = spy()
+            }
+        end)
+
+        cache_set('k', 'v')
+
+        assert.spy(driverSet).was_called()
+        assert.spy(driverSet).was_called_with('k', 'v')
+    end)
+
+    it('should able to get with custom driver', function()
+        local driverGet = spy()
+        cache_set_driver(function()
+            return {
+                get = driverGet,
+                set = spy()
+            }
+        end)
+
+        cache_get('k')
+
+        assert.spy(driverGet).was_called()
+        assert.spy(driverGet).was_called_with('k')
+    end)
+
+    it('should able to get with custom driver', function()
+        local driverUnset = spy()
+        cache_set_driver(function()
+            return {
+                unset = driverUnset,
+                set   = spy(),
+                set   = spy()
+            }
+        end)
+
+        cache_unset('k')
+
+        assert.spy(driverUnset).was_called()
+        assert.spy(driverUnset).was_called_with('k')
     end)
 end)
