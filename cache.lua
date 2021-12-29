@@ -136,3 +136,17 @@ end
 function cache_set_driver(driverInitFunc)
     g_cacheDriver = driverInitFunc()
 end
+
+function cache_remember(key, getter)
+    local value = cache_get(key)
+
+    if value then
+        return value
+    end
+
+    value = getter()
+
+    cache_set(key, value)
+
+    return value
+end
