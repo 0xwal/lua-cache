@@ -13,6 +13,8 @@
 ---@field set SetFunc
 ---@field get GetFunc
 ---@field unset UnsetFunc
+---@field export function|nil
+---@field import function|nil
 
 
 ---@alias CacheDriverInitFunc fun(): CacheDriver

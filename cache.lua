@@ -24,6 +24,14 @@ function memoryDriver()
         store[key] = nil
     end
 
+    m.export    = function()
+        return store
+    end
+
+    m.import    = function(data)
+        store = data
+    end
+
     return m
 end
 
@@ -135,6 +143,11 @@ end
 ---@param driverInitFunc CacheDriverInitFunc
 function cache_set_driver(driverInitFunc)
     g_cacheDriver = driverInitFunc()
+end
+
+---@return CacheDriver
+function cache_get_driver()
+    return g_cacheDriver
 end
 
 function cache_remember(key, getter)
